@@ -1,0 +1,16 @@
+---
+# handlers file for log
+- name: Restart elasticsearch
+  systemd:
+    name: elasticsearch
+    state: restarted
+
+- name: Restart kibana
+  systemd:
+    name: kibana
+    state: restarted
+
+- name: Restart logstash
+  systemd:
+    name: logstash
+    state: restarted
