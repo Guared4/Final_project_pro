@@ -1,0 +1,101 @@
+---
+# tasks file for frontend
+- name: Install nginx
+  apt:
+    name: nginx
+    state: present
+    update_cache: true
+  tags: nginx
+
+- name: Start nginx service
+  systemd:
+    name: nginx
+    state: started
+    enabled: true
+  tags: nginx
+
+- name: Remove nginx default conf files
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "/etc/nginx/sites-available/default"
+    - "/etc/nginx/sites-enabled/default"
+  tags: nginx
+
+- name: Create folder fo ssl
+  file:
+    path: "/etc/nginx/ssl/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - "{{ frontend_srv }}"
+    - "{{ public_name }}"
+  tags:
+    - nginx
+    - ssl
+
+- name: Copy certificates
+  copy:
+    src: "files/certificates/{{ item }}"
+    dest: "/etc/nginx/ssl/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - "{{ frontend_srv }}/guared.crt"
+    - "{{ frontend_srv }}/guared.key"
+    - "{{ public_name }}/guared.crt"
+    - "{{ public_name }}/guared.key"
+  notify: Reload nginx
+  tags:
+    - nginx
+    - ssl
+
+- name: Add nginx conf file
+  copy:
+    src: files/nginx.conf
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: Reload nginx
+  tags: nginx
+
+- name: Add nginx default site
+  template:
+    src: templates/frontend.conf.j2
+    dest: /etc/nginx/sites-available/frontend.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: Reload nginx
+  tags: nginx
+
+- name: Enable site
+  file:
+    src: /etc/nginx/sites-available/frontend.conf
+    dest: /etc/nginx/sites-enabled/frontend.conf
+    owner: root
+    group: root
+    state: link
+  notify: Reload nginx
+  tags: nginx
+
+- name: Reload nginx
+  meta: flush_handlers
+  tags: nginx
+
+- name: Configure node exporter
+  import_tasks: node_exporter.yml
+
+- name: Configure nginx exporter
+  import_tasks: nginx_exporter.yml
+
+- name: Configure filebeat
+  import_tasks: filebeat.yml
+
+- name: Configure iptables
+  import_tasks: iptables.yml
