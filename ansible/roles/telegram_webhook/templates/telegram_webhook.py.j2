@@ -1,0 +1,27 @@
+import os
+import logging
+
+from flask import Flask, request
+app = Flask(__name__)
+
+logging.basicConfig(
+    filename='/var/log/telegram_webhook.log',
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(message)s'
+)
+
+TELEGRAM_TOKEN = "{{ telegram_bot_token }}"
+TELEGRAM_CHAT_ID = "{{ telegram_chat_id }}"
+
+@app.route('/', methods=['POST'])
+def webhook():
+    data = request.json
+    print(f"Received alert: {data}")
+    return '', 200
+
+@app.route('/', methods=['POST', 'GET'])
+def index():
+    return 'Webhook works!', 200
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
