@@ -1,0 +1,13 @@
+---
+- name: Ping and gather host info
+  hosts: all
+  gather_facts: yes
+
+  tasks:
+    - name: Ping test
+      ansible.builtin.ping:
+
+    - name: Display host information
+      ansible.builtin.debug:
+        msg: "Host {{ inventory_hostname }} ({{ ansible_host }}) is alive"
+      when: ansible_ping.success is defined
