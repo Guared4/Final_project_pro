@@ -1,0 +1,23 @@
+---
+- name: Обновление всех пакетов на всех Ubuntu-хостах
+  hosts: all
+  become: true
+  tasks:
+
+    - name: Обновить кэш apt
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Обновить все пакеты (dist-upgrade)
+      apt:
+        upgrade: dist
+
+    - name: Удалить неиспользуемые пакеты
+      apt:
+        autoremove: yes
+        purge: yes
+
+    - name: Очистить кэш apt
+      apt:
+        autoclean: yes
