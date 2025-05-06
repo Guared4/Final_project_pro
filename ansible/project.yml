@@ -1,0 +1,49 @@
+---
+- hosts: db
+  become: true
+  gather_facts: true
+  vars_files: inventory/group_vars/all.yml
+  roles:
+    - role: db
+      tags: db
+
+- hosts: frontend
+  become: true
+  gather_facts: false
+  vars_files: inventory/group_vars/all.yml
+  roles:
+    - role: frontend
+      tags: frontend
+
+- hosts: backend
+  become: true
+  gather_facts: true
+  vars_files: inventory/group_vars/all.yml
+  roles:
+    - role: backend
+      tags: backend
+
+- hosts: monitoring
+  become: true
+  gather_facts: true
+  vars_files: inventory/group_vars/all.yml
+  roles:
+    - role: monitoring
+      tags: monitoring
+
+- hosts: ansible
+  become: true
+  gather_facts: true
+  vars_files: inventory/group_vars/all.yml
+  roles:
+    - role: telegram_webhook
+      tags: telegram_webhook
+
+- hosts: log
+  become: true
+  gather_facts: false
+  vars_files: inventory/group_vars/all.yml
+  roles:
+    - role: log
+      tags: log
+...
