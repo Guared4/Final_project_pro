@@ -1,0 +1,53 @@
+---
+# tasks file for monitoring
+- name: Create group monitoring
+  group:
+    name: monitoring
+    state: present
+  tags:
+   - prometheus
+   - grafana
+   - ssl
+
+- name: Create folder fo ssl
+  file:
+    path: "/etc/ssl/{{ monitoring_srv }}"
+    state: directory
+    owner: root
+    group: monitoring
+    mode: 0750
+  tags:
+   - prometheus
+   - grafana
+   - ssl
+
+- name: Copy certificates
+  copy:
+    src: "{{ item }}"
+    dest: "/etc/ssl/{{ monitoring_srv }}"
+    owner: root
+    group: monitoring
+    mode: 0750
+  with_items:
+    - "files/certificates/{{ monitoring_srv }}/ca.crt"
+    - "files/certificates/{{ monitoring_srv }}/guared.crt"
+    - "files/certificates/{{ monitoring_srv }}/guared.key"
+  tags:
+   - prometheus
+   - grafana
+   - ssl
+
+- name: Configure prometheus
+  import_tasks: prometheus.yml
+
+- name: Configure grafana
+  import_tasks: grafana.yml
+
+- name: Configure alertmanager
+  import_tasks: alertmanager.yml
+
+- name: Configure node exporter
+  import_tasks: node_exporter.yml
+
+- name: Configure iptables
+  import_tasks: iptables.yml
