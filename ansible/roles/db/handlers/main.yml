@@ -1,0 +1,16 @@
+---
+# handlers file for db
+- name: Restart mysql
+  systemd:
+    name: mysql
+    state: restarted
+
+- name: Restart mysqld_exporter
+  systemd:
+    name: mysqld_exporter
+    state: restarted
+
+- name: Restart filebeat
+  systemd:
+    name: filebeat
+    state: restarted
