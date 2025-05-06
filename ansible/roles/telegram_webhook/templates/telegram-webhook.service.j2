@@ -1,0 +1,11 @@
+[Unit]
+Description=Telegram Alertmanager Webhook
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /opt/telegram_webhook/telegram_webhook.py
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
