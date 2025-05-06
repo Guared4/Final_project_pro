@@ -1,0 +1,117 @@
+---
+# tasks file for backend
+- name: Install apache
+  apt:
+    name:
+      - apache2
+      - apache2-utils
+      - php8.1
+      - php8.1-mysql
+      - libapache2-mod-php8.1
+      - php8.1-cli
+      - php8.1-cgi
+      - php8.1-gd
+    state: present
+    update_cache: true
+  tags: apache
+
+- name: Create folder for ssl
+  file:
+    path: "/etc/apache2/ssl/{{ ansible_hostname }}.{{ domain_name }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - apache
+    - ssl
+
+- name: Copy SSL certificates
+  copy:
+    src: "files/certificates/{{ ansible_hostname }}.{{ domain_name }}/{{ item.src }}"
+    dest: "/etc/apache2/ssl/{{ ansible_hostname }}.{{ domain_name }}/{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  loop:
+    - { src: "guared.crt", dest: "cert.pem", mode: "0644" }
+    - { src: "guared.key", dest: "key.pem", mode: "0640" }
+  tags:
+    - apache
+    - ssl
+
+- name: Remove default apache conf
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /etc/apache2/sites-available/000-default.conf
+    - /etc/apache2/sites-available/default-ssl.conf
+    - /etc/apache2/sites-enabled/000-default.conf
+  notify: Reload apache
+  tags: apache
+
+- name: Copy apache config
+  template:
+    src: templates/backend.conf.j2
+    dest: /etc/apache2/sites-available/backend.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: Reload apache
+  tags: apache
+
+- name: Enable site
+  file:
+    src: /etc/apache2/sites-available/backend.conf
+    dest: /etc/apache2/sites-enabled/backend.conf
+    owner: root
+    group: root
+    state: link
+  notify: Reload apache
+  tags: apache
+
+- name: Enable ssl
+  file:
+    src: "/etc/apache2/mods-available/{{ item }}"
+    dest: "/etc/apache2/mods-enabled/{{ item }}"
+    owner: root
+    group: root
+    state: link
+  with_items:
+    - ssl.load
+    - ssl.conf
+    - setenvif.conf
+    - setenvif.load
+    - mime.conf
+    - mime.load
+    - socache_shmcb.load
+  notify: Reload apache
+  tags: apache
+
+- name: Remove default index.html
+  file:
+    path: /var/www/html/index.html
+    state: absent
+  notify: Reload apache
+  tags: apache
+
+- name: Reload apache
+  meta: flush_handlers
+  tags: apache
+
+- name: Start apache service
+  systemd:
+    name: apache2
+    state: started
+    enabled: true
+  tags: apache
+
+- name: Configure wordpress
+  import_tasks: wordpress.yml
+
+- name: Configure node exporter
+  import_tasks: node_exporter.yml
+
+- name: Configure iptables
+  import_tasks: iptables.yml
