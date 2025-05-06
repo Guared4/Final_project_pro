@@ -1,0 +1,41 @@
+---
+# tasks file for log
+- name: Install java
+  apt:
+    name: default-jdk
+    state: present
+    update_cache: true
+  tags:
+    - elk
+    - elasticsearch
+    - kibana
+    - logstash
+
+#- name: Copy deb files to server
+#  copy:
+#    src: "files/{{item}}"
+#    dest: /home/vagrant
+#  with_items:
+#    - "elasticsearch-{{ elk_version }}-amd64.deb"
+#    - "kibana-{{ elk_version }}-amd64.deb"
+#    - "logstash-{{ elk_version }}-amd64.deb"
+#  tags:
+#    - elk
+#    - elasticsearch
+#    - kibana
+#    - logstash
+
+- name: Configure elasticsearch
+  import_tasks: elasticsearch.yml
+
+- name: Configure kibana
+  import_tasks: kibana.yml
+
+- name: Configure logstash
+  import_tasks: logstash.yml
+
+- name: Configure node exporter
+  import_tasks: node_exporter.yml
+
+- name: Configure iptables
+  import_tasks: iptables.yml
