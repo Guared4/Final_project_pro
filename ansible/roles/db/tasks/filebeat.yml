@@ -1,0 +1,72 @@
+- name: Install apt-transport-https (with retry)
+  apt:
+    name: apt-transport-https
+    state: present
+    update_cache: yes
+  retries: 5
+  delay: 10
+  register: apt_result
+  until: apt_result is succeeded
+  tags: filebeat
+
+- name: Add Elastic GPG key
+  apt_key:
+    url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    state: present
+  tags: filebeat
+
+- name: Add Elastic APT repository
+  apt_repository:
+    repo: "deb https://artifacts.elastic.co/packages/8.x/apt stable main"
+    state: present
+    filename: elastic-8.x
+  tags: filebeat
+
+- name: Install Filebeat
+  apt:
+    name: filebeat
+    state: present
+    update_cache: yes
+  retries: 5
+  delay: 10
+  register: filebeat_result
+  until: filebeat_result is succeeded
+  tags: filebeat
+
+- name: Copy filebeat config
+  template:
+    src: templates/filebeat.yml.j2
+    dest: /etc/filebeat/filebeat.yml
+    owner: root
+    group: root
+    mode: 0600
+  notify: Restart filebeat
+  tags: filebeat
+
+- name: Enable mysql module
+  shell: filebeat modules enable mysql
+  args:
+    creates: /etc/filebeat/modules.d/mysql.yml
+  notify: Restart filebeat
+  tags: filebeat
+
+- name: Copy filebeat nginx module config
+  copy:
+    src: files/mysql.yml
+    dest: /etc/filebeat/modules.d/mysql.yml
+    owner: root
+    group: root
+    mode: 0644
+  notify: Restart filebeat
+  tags: filebeat
+
+- name: Restart filebeat
+  meta: flush_handlers
+  tags: filebeat
+
+- name: Start filebeat service
+  systemd:
+    name: filebeat
+    state: started
+    enabled: true
+  tags: filebeat
