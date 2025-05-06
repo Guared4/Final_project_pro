@@ -1,0 +1,100 @@
+- name: Ensure WordPress directory exists
+  file:
+    path: /var/www/html
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: 0755
+  tags: wordpress
+
+- name: Download latest WordPress archive
+  get_url:
+    url: https://wordpress.org/latest.tar.gz
+    dest: /tmp/wordpress-latest.tar.gz
+    mode: '0644'
+  tags: wordpress
+
+- name: Clean existing WordPress files (except wp-content)
+  block:
+    - name: Find existing WordPress files (except wp-content)
+      find:
+        paths: /var/www/html
+        file_type: any
+        patterns:
+          - "*"
+          - ".*"
+        excludes: "wp-content"
+      register: existing_files
+
+    - name: Remove found files
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ existing_files.files }}"
+      when: existing_files.matched > 0
+  tags: wordpress
+
+- name: Extract WordPress with proper ownership
+  unarchive:
+    src: /tmp/wordpress-latest.tar.gz
+    dest: /var/www/html
+    remote_src: true
+    extra_opts: [--strip-components=1]
+    owner: www-data
+    group: www-data
+    mode: '0755'
+  notify: Reload apache
+  tags: wordpress
+
+- name: Secure wp-config.php permissions
+  template:
+    src: templates/wp-config.php.j2
+    dest: /var/www/html/wp-config.php
+    owner: www-data
+    group: www-data
+    mode: '0640'
+  notify: Reload apache
+  tags: wordpress
+
+- name: Ensure theme directory exists
+  file:
+    path: /var/www/html/wp-content/themes/TestContentGenerator
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: 0755
+  tags: wordpress
+
+- name: Deploy custom functions.php
+  copy:
+    src: files/functions.php
+    dest: /var/www/html/wp-content/themes/TestContentGenerator/functions.php
+    owner: www-data
+    group: www-data
+    mode: '0644'
+  notify: Reload apache
+  tags: wordpress
+
+- name: Ensure uploads directory exists
+  file:
+    path: /var/www/html/wp-content/uploads
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0775'
+  tags: wordpress
+
+- name: Set recursive permissions
+  file:
+    path: /var/www/html
+    owner: www-data
+    group: www-data
+    mode: "0755"
+    recurse: true
+  tags: wordpress
+
+- name: Clean up temporary files
+  file:
+    path: /tmp/wordpress-latest.tar.gz
+    state: absent
+  tags: wordpress
