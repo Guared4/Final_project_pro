@@ -1,0 +1,19 @@
+apiVersion: 1
+
+groups:
+  - name: Host Health
+    folder: {{ grafana_alert_folder }}
+    interval: 1m
+    rules:
+      - uid: host-down-alert
+        alert: Host Down Alert
+        expr: up{job="node_exporter"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          alert_type: host_down
+        annotations:
+          summary: "Host is down"
+          description: "This alert fires when the host is not responding (up == 0)."
+        noDataState: NoData
+        execErrState: Error
