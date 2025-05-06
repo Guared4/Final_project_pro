@@ -1,0 +1,71 @@
+---
+- name: Ensure Python and pip are installed
+  apt:
+    name:
+      - python3
+      - python3-pip
+    state: present
+    update_cache: yes
+
+- name: Create directory for offline Flask wheels
+  file:
+    path: /tmp/flask_offline
+    state: directory
+    mode: '0755'
+
+- name: Copy Flask .whl packages to remote host
+  copy:
+    src: flask_offline/
+    dest: /tmp/flask_offline/
+    mode: '0644'
+
+- name: Install Flask and dependencies offline
+  shell: |
+    pip3 install --no-index --find-links=/tmp/flask_offline flask
+  args:
+    executable: /bin/bash
+  environment:
+    PIP_NO_INDEX: "1"
+    PIP_FIND_LINKS: "/tmp/flask_offline"
+
+- name: Create directory for webhook app
+  file:
+    path: /opt/telegram_webhook
+    state: directory
+    mode: '0755'
+
+- name: Deploy webhook Python script
+  template:
+    src: telegram_webhook.py.j2  # Используем шаблон для python-скрипта
+    dest: /opt/telegram_webhook/telegram_webhook.py
+    mode: '0755'
+
+- name: Deploy systemd unit for webhook service
+  template:
+    src: telegram-webhook.service.j2  # Шаблон для unit-файла systemd
+    dest: /etc/systemd/system/telegram-webhook.service
+    mode: '0644'
+
+- name: Create log file for webhook
+  file:
+    path: /var/log/telegram_webhook.log
+    state: touch
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Ensure logging directory has correct permissions
+  file:
+    path: /var/log
+    state: directory
+    mode: '0755'
+
+- name: Reload systemd to recognize new service
+  systemd:
+    daemon_reload: yes
+
+- name: Enable and start Telegram webhook service
+  systemd:
+    name: telegram-webhook.service
+    enabled: yes
+    state: restarted
