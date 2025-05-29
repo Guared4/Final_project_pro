@@ -7,7 +7,6 @@ db_master_srv: db_master.{{ domain_name }}
 db_slave_srv: db_slave.{{ domain_name }}
 monitoring_srv: monitoring.{{ domain_name }}
 log_srv: log.{{ domain_name }}
-monitoring_ip: 192.168.57.15
 
 db_name: wordpress
 db_user: wordpress
