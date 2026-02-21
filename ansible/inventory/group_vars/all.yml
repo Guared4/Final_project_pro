@@ -7,7 +7,6 @@ db_master_srv: db_master.{{ domain_name }}
 db_slave_srv: db_slave.{{ domain_name }}
 monitoring_srv: monitoring.{{ domain_name }}
 log_srv: log.{{ domain_name }}
-monitoring_ip: 192.168.57.15
 
 db_name: wordpress
 db_user: wordpress
@@ -30,10 +29,7 @@ nginx_exporter_version: 1.3.0
 elk_version: 8.15.1
 
 
-alert_email: guared1@gmail.com
-alert_email_smtp: "smtp.gmail.com:587"
-
-telegram_bot_token: "8087360708:AAGwpKBTnqCg3Y9yF-aI8Lj25Jfrm8-nWUc"
-telegram_chat_id: "384027747"
+telegram_bot_token: "you_telegrambot_token"
+telegram_chat_id: "you_id"
 alertmanager_bot_port: 8080
 
