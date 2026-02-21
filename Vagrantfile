@@ -1,6 +1,6 @@
 Vagrant.configure("2") do |config|
   nodes = [
-    { name: "frontend",  ip: "192.168.57.10", ip_ext: "192.168.57.100", cpus: 2, memory: 2048 },
+    { name: "frontend",  ip: "192.168.57.10", ip_ext: "192.168.1.10", cpus: 2, memory: 2048 },
     { name: "backend1",  ip: "192.168.57.11", cpus: 2, memory: 2048 },
     { name: "backend2",  ip: "192.168.57.12", cpus: 2, memory: 2048 },
     { name: "db-master", ip: "192.168.57.13", cpus: 2, memory: 1024 },
